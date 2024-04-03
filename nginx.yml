@@ -1,0 +1,25 @@
+- name: Installation de NGINX via Docker sur les serveurs de staging
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Vérification de la présence de Docker sur le serveur
+      command: docker --version
+      register: docker_check
+      ignore_errors: yes
+
+    - name: Installation de Docker et Docker-compose (si non installés)
+      include_role:
+        name: install_docker
+      when: docker_check.rc != 0
+
+    - name: Tirer l'image NGINX
+      command: docker pull nginx:latest
+
+    - name: Création et démarrage du conteneur NGINX
+      docker_container:
+        name: nginx_container
+        image: nginx:latest
+        ports:
+          - "8080:80"
+        state: started
